@@ -29,8 +29,17 @@ public class RobotMap {
   public static int fRightCim = 2;
   public static int bLeftCim = 3;
   public static int bRightCim = 4;
-
+  //lift motors
   public static int lLiftMotor = 2;
   public static int rLiftMotor = 3;
+  //camera sources
+  public static int frontCam = 0;
+  public static int backCam = 1;
+  //lift encoder mxp dio ports
+  public static final int encoderPortA = 8;
+  public static final int encoderPortB = 9;
+  //camera settins
+  public static int Img_Width = 120;
+  public static int Img_Height = 160;
   
 }

@@ -7,11 +7,20 @@
 
 package frc.robot;
 
+import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
+
+import edu.wpi.cscore.CvSink;
+import edu.wpi.cscore.CvSource;
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.commands.DriveController;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.DriveTrainSubsytem;
 import frc.robot.subsystems.ExampleSubsystem;
@@ -32,8 +41,12 @@ public class Robot extends TimedRobot {
   public static LiftPidSubsystem lift = new LiftPidSubsystem();
   
   public static OI m_oi;
+  //vision thread for cameras
+  Thread visionThread;
+
 
   Command m_autonomousCommand;
+  //object to asign auton mode to
   SendableChooser<Command> m_chooser = new SendableChooser<>();
 
   /**
@@ -43,9 +56,72 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     m_oi = new OI();
+    //basically for auton "Defualt Auto" will be called since set as defualt, or if selected
+    //and will call command "Example Command" for example here
     m_chooser.setDefaultOption("Default Auto", new ExampleCommand());
     // chooser.addOption("My Auto", new MyAutoCommand());
     SmartDashboard.putData("Auto mode", m_chooser);
+
+    //setup USB cameras:
+    //Start camera server
+    CameraServer server = CameraServer.getInstance();
+    //get usb cams
+    UsbCamera fCam = server.startAutomaticCapture("Front Cam", RobotMap.frontCam);
+    UsbCamera bCam = server.startAutomaticCapture("Back Cam", RobotMap.backCam);
+    //set settings for cams
+    if (
+      fCam.setFPS(20) &&
+      bCam.setFPS(20) &&
+      fCam.setResolution(RobotMap.Img_Width, RobotMap.Img_Height) &&
+      bCam.setResolution(160, 120)
+    )
+    {
+      SmartDashboard.putBoolean("Camera Status", true);
+    } else {
+      SmartDashboard.putBoolean("Camera Status", false);
+    }
+
+    //config vison thread
+    visionThread = new Thread(() -> {
+
+      //sets A sink for user code to accept video frames as OpenCV images
+      CvSink cvSink = CameraServer.getInstance().getVideo(fCam);
+      //A source that represents a video camera to put on dashboard driver
+      CvSource cvSource = CameraServer.getInstance().putVideo("CV fCam", RobotMap.Img_Width, RobotMap.Img_Height);
+      // Mat (matrix) for storing images to process, very memory expensive
+      Mat frame = new Mat();
+      //creating grip object
+      GripPipeline pipeline = new GripPipeline();
+      // lets the robot stop this thread when restarting robot code or
+			// deploying.
+			while (!Thread.interrupted()) {
+			  // Tell the CvSink to grab a frame from the camera and put it
+				// in the source image. If there is an error notify the output.
+				if (cvSink.grabFrame(frame) == 0) {
+					// Send the output the error.
+					cvSource.notifyError(cvSink.getError());
+					// skip the rest of the current iteration
+					continue;
+        }
+        //calls grip pipeline to process image
+				pipeline.process(frame);
+				//displays number of contours found
+        SmartDashboard.putNumber("number of contours", pipeline.findContoursOutput().size());
+        // draw all contours (-1 = all)
+        Imgproc.drawContours(frame, pipeline.findContoursOutput(), -1, new Scalar(0, 0, 255));
+        // Give the output stream a new image to display
+				cvSource.putFrame(frame);
+			}
+
+    });
+
+    //start thread (must set Daemon before thread)
+    try {
+      visionThread.setDaemon(true);
+      visionThread.start();
+    } catch(Exception e){
+     SmartDashboard.putBoolean("Vision Thread", false);
+    }
   }
 
   /**
@@ -98,6 +174,10 @@ public class Robot extends TimedRobot {
 
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
+      m_autonomousCommand.start();
+    } else {
+      //run telop command (NOT sure if we actually need and scheduler may just run it anyway)
+      m_autonomousCommand = new DriveController();
       m_autonomousCommand.start();
     }
   }

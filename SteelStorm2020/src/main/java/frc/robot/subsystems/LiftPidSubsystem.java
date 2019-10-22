@@ -10,7 +10,9 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.command.PIDSubsystem;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.RobotMap;
 import frc.robot.commands.LiftController;
 
@@ -28,7 +30,7 @@ public class LiftPidSubsystem extends PIDSubsystem {
   public static TalonSRX rLiftMotor = new TalonSRX(RobotMap.rLiftMotor);
 
   //would also config encoder here if not talon
-
+  public static final Encoder liftEncoder = new Encoder(8,9);
 
 
   public LiftPidSubsystem() {
@@ -39,6 +41,8 @@ public class LiftPidSubsystem extends PIDSubsystem {
     //getPIDController().setContinuous(false);
     setOutputRange(0, 1.0);
     setSetpoint(target);
+    //config encoder (may need to change value)
+    liftEncoder.setDistancePerPulse(1/360.0);
     // Use these to get going:
     // setSetpoint() - Sets where the PID controller should move the system
     // to
@@ -75,13 +79,15 @@ public class LiftPidSubsystem extends PIDSubsystem {
     // Return your input value for the PID loop
     // e.g. a sensor, like a potentiometer:
     // yourPot.getAverageVoltage() / kYourMaxVoltage;
-    return lLiftMotor.getSelectedSensorPosition();
+    SmartDashboard.putNumber("lEncoder", liftEncoder.getDistance());
+    return liftEncoder.getDistance();
   }
 
   @Override
   protected void usePIDOutput(double output) {
     // Use output to drive your system, like a motor
     // e.g. yourMotor.set(output);
+    SmartDashboard.putNumber("PIDout", output);
     lLiftMotor.set(ControlMode.PercentOutput, output);
     rLiftMotor.set(ControlMode.PercentOutput, output);
   }
