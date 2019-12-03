@@ -24,10 +24,10 @@ public class RobotMap {
   // public static int rangefinderPort = 1;
   // public static int rangefinderModule = 1;
   
-  //4 main cim motors of drive train
+  //4 main cim motors of drive train PWM
   public static int fLeftCim = 1;
-  public static int fRightCim = 2;
-  public static int bLeftCim = 3;
+  public static int fRightCim = 3;
+  public static int bLeftCim = 2;
   public static int bRightCim = 4;
   //lift motors
   public static int lLiftMotor = 2;
@@ -41,5 +41,18 @@ public class RobotMap {
   //camera settins
   public static int Img_Width = 120;
   public static int Img_Height = 160;
-  
+  //drive PID tuning
+  public static double threshold = 0.1;
+  public static double Kp = 0.03;
+  //analog port
+  public static int mb1013Port = 0;
+  //timer for auton moving
+  public static double driveTime = 3.0;
+  public static double autonSpeed = 0.3;
+  //ratio voltage to inches for ultra-sonic sensor
+  public static double VoltToInches = 1.0;
+  //throttle limit cut
+  public static double throttleCut = 0.6;
+  //time delay for P controllers
+  public static double delayTime = 0.005;
 }

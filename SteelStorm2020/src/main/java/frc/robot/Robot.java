@@ -15,17 +15,19 @@ import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
+import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.commands.AutoDriveCommand;
+import frc.robot.commands.BallCollect;
 import frc.robot.commands.DriveController;
-import frc.robot.commands.ExampleCommand;
+import frc.robot.subsystems.AutonDriveSubsystem;
+import frc.robot.subsystems.BallCollectSubsystem;
 import frc.robot.subsystems.DriveTrainSubsytem;
-import frc.robot.subsystems.ExampleSubsystem;
-import frc.robot.subsystems.LiftPidSubsystem;
-
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the TimedRobot
@@ -34,20 +36,17 @@ import frc.robot.subsystems.LiftPidSubsystem;
  * project.
  */
 public class Robot extends TimedRobot {
-
-  //Instantiate all subsytems 
-  public static ExampleSubsystem m_subsystem = new ExampleSubsystem();
-  public static DriveTrainSubsytem drivetrain = new DriveTrainSubsytem();
-  public static LiftPidSubsystem lift = new LiftPidSubsystem();
   
+  public static Subsystem driveTrain;
+  public static AutonDriveSubsystem autoDrive;
   public static OI m_oi;
   //vision thread for cameras
-  Thread visionThread;
-
-
-  Command m_autonomousCommand;
+  //Thread visionThread;
+  Command autonCommand;
   //object to asign auton mode to
   SendableChooser<Command> m_chooser = new SendableChooser<>();
+  //setup gyro
+  public static ADXRS450_Gyro gyro = new ADXRS450_Gyro();
 
   /**
    * This function is run when the robot is first started up and should be
@@ -55,32 +54,39 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
+
+    //Instantiate all subsytems 
+    //public static BallCollectSubsystem ballCollect = new BallCollectSubsystem();
+    driveTrain = new DriveTrainSubsytem();
+    autoDrive = new AutonDriveSubsystem();    
     m_oi = new OI();
+
+    SmartDashboard.putData(driveTrain);
+    //SmartDashboard.putData(autoDrive);
+  
     //basically for auton "Defualt Auto" will be called since set as defualt, or if selected
     //and will call command "Example Command" for example here
-    m_chooser.setDefaultOption("Default Auto", new ExampleCommand());
-    // chooser.addOption("My Auto", new MyAutoCommand());
+    m_chooser.setDefaultOption("Default Auto", new AutoDriveCommand());
+    m_chooser.addOption("Manual mode", new DriveController());
     SmartDashboard.putData("Auto mode", m_chooser);
+  
+    //calibrate gyro
+    gyro.calibrate();
 
     //setup USB cameras:
     //Start camera server
-    CameraServer server = CameraServer.getInstance();
+    final CameraServer server = CameraServer.getInstance();
     //get usb cams
-    UsbCamera fCam = server.startAutomaticCapture("Front Cam", RobotMap.frontCam);
-    UsbCamera bCam = server.startAutomaticCapture("Back Cam", RobotMap.backCam);
+    final UsbCamera fCam = server.startAutomaticCapture("Front Cam", RobotMap.frontCam);
+    final UsbCamera bCam = server.startAutomaticCapture("Back Cam", RobotMap.backCam);
     //set settings for cams
-    if (
-      fCam.setFPS(20) &&
-      bCam.setFPS(20) &&
-      fCam.setResolution(RobotMap.Img_Width, RobotMap.Img_Height) &&
-      bCam.setResolution(160, 120)
-    )
+    if (fCam.setFPS(20) && bCam.setFPS(20) && fCam.setResolution(RobotMap.Img_Width, RobotMap.Img_Height) && bCam.setResolution(160, 120))
     {
       SmartDashboard.putBoolean("Camera Status", true);
     } else {
       SmartDashboard.putBoolean("Camera Status", false);
     }
-
+/*
     //config vison thread
     visionThread = new Thread(() -> {
 
@@ -120,8 +126,8 @@ public class Robot extends TimedRobot {
       visionThread.setDaemon(true);
       visionThread.start();
     } catch(Exception e){
-     SmartDashboard.putBoolean("Vision Thread", false);
-    }
+     SmartDashboard.putBoolean("Vision Thread", false); 
+    } */
   }
 
   /**
@@ -163,7 +169,8 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
-    m_autonomousCommand = m_chooser.getSelected();
+    //resets gyro value upon initializing
+    autonCommand = m_chooser.getSelected();
 
     /*
      * String autoSelected = SmartDashboard.getString("Auto Selector",
@@ -173,12 +180,9 @@ public class Robot extends TimedRobot {
      */
 
     // schedule the autonomous command (example)
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.start();
-    } else {
-      //run telop command (NOT sure if we actually need and scheduler may just run it anyway)
-      m_autonomousCommand = new DriveController();
-      m_autonomousCommand.start();
+    if (autonCommand != null) {
+      autonCommand.start();
+
     }
   }
 
@@ -196,9 +200,10 @@ public class Robot extends TimedRobot {
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.cancel();
+    if (autonCommand != null) {
+      autonCommand.cancel();
     }
+    
   }
 
   /**
@@ -214,5 +219,6 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void testPeriodic() {
+
   }
 }

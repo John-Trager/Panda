@@ -7,12 +7,16 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj.command.Command;
+import static frc.robot.OI.driver;
 
-public class LiftController extends Command {
-  public LiftController() {
+import edu.wpi.first.wpilibj.command.Command;
+import frc.robot.Robot;
+
+public class BallCollect extends Command {
+  public BallCollect() {
     // Use requires() here to declare subsystem dependencies
     // eg. requires(chassis);
+    //requires(Robot.ballCollect);
   }
 
   // Called just before this Command runs the first time
@@ -23,6 +27,8 @@ public class LiftController extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
+    //Robot.ballCollect.checkCollector(driver.getBButton(), driver.getAButton(), driver.getYButton());
+    //Robot.ballCollect.setCollector();
   }
 
   // Make this return true when this Command no longer needs to run execute()

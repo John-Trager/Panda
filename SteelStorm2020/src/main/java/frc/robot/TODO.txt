@@ -1,0 +1,115 @@
+TODO:
+ ____________________________
+|Create Orient to Angle Drive|
+- gyro setup + !testing values!
+- create simple P controller to control z-axis
+-heading delta method
+~ long term create PID controlled z-axis
+--> new strat: when z-axis is zero, have PID/P controller on so drives straight and when > then 0.1 P/PID is disabled
+--> '' could also use above strat when strafing 
+ ________________________________________
+|Auton based off of Orient to Angle Drive|
+ ________________________________
+|Throttle Curve For Mecanum Drive|
+-simple math?
+ __________________
+|Vision Recognition|
+-relearn grip and contour tracking/mapping
+-PID for tracking object based of coordinates of contours
+
+
+CHECK LIST:
+when testing remeber to check System.out prints for gyro value and drivetrain init method
+remove gyro.reset() from DriveTrainSubsystem, move to robot init? or begging of auton
+setSafetyEnabled() may need to turn off for auton and also for P controller do more research
+set ports for d-pad buttons
+calibrate gyro?
+stop() method in drivetrain
+
+TODO DriveTrainSubsystem:
+getDirection(...) when press button sets direction and keeps at that direction until another button is pressed or z-axis is moved
+
+merge mecanumAngleDrive() and getDirection()
+
+new method step: 
+1. if zRotation > threshold
+ (true) -> got to manual mecanum drive
+ (fasle) -> goto 2
+2. if any d-pad buttons pressed 
+ (true) -> set Direction to sepcifc value
+ (false) -> set Direction to last heading
+ --> goto 3
+3. angle holding (y,x,ouput)
+
+setDirection
+-could be escape button to set to actual last heading if using last pressed button
+-when zRotation is being used and or after, cancels and goes to actual last heading
+
+AUTON:
+add subsystem/command make run on time 
+additionaly add ulta-sonic sensor to detect distance then slow and stop
+HOWTO:
+add autonCommand to robotInit() -- autonomousCommand = new SodaDelivery();
+
+auton for command and subsystem:
+make getAngle() to init the angle
+then go forward for x time or ultra sonic sensor
+when done isFinished() = true --> stop moving go to teleop
+
+ULTRA SONIC SENSOR setup
+use pin 3,6,7 coonect to anolog on rio
+
+package frc.robot.commands;
+
+import static frc.robot.Robot.driveTrain;
+
+import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Robot;
+import frc.robot.RobotMap;
+import frc.robot.subsystems.AutoDriveSubsystem;
+import frc.robot.subsystems.DriveTrainSubsytem;
+
+public class autonCommand extends Command {
+  public autonCommand() {
+    // Use requires() here to declare subsystem dependencies
+    // eg. requires(chassis);
+    requires(Robot.autoDrive);
+    requires(driveTrain);
+  }
+
+  // Called just before this Command runs the first time
+  @Override
+  protected void initialize() {
+    DriveTrainSubsytem.resetGyro();
+    DriveTrainSubsytem.setAngle();
+  }
+
+  // Called repeatedly when this Command is scheduled to run
+  @Override
+  protected void execute() {
+    Robot.autoDrive.autonTimerMoveForward();
+    SmartDashboard.putNumber("Timer", DriveTrainSubsytem.timer.get());
+  }
+
+  // Make this return true when this Command no longer needs to run execute()
+  @Override
+  protected boolean isFinished() {
+    //method returns true if times up or if sensor is close enough
+    return false;
+  }
+
+  // Called once after isFinished returns true
+  @Override
+  protected void end() {
+   //Robot.driveTrain.stop();
+  }
+
+  // Called when another command which requires one or more of the same
+  // subsystems is scheduled to run
+  @Override
+  protected void interrupted() {
+    end();
+  }
+}
+
