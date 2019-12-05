@@ -17,6 +17,7 @@ import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.command.Subsystem;
@@ -43,10 +44,14 @@ public class Robot extends TimedRobot {
   //vision thread for cameras
   //Thread visionThread;
   Command autonCommand;
+  Command manualDriveCommand;
   //object to asign auton mode to
   SendableChooser<Command> m_chooser = new SendableChooser<>();
   //setup gyro
   public static ADXRS450_Gyro gyro = new ADXRS450_Gyro();
+
+  public static Timer timer = new Timer();
+
 
   /**
    * This function is run when the robot is first started up and should be
@@ -58,7 +63,7 @@ public class Robot extends TimedRobot {
     //Instantiate all subsytems 
     //public static BallCollectSubsystem ballCollect = new BallCollectSubsystem();
     driveTrain = new DriveTrainSubsytem();
-    autoDrive = new AutonDriveSubsystem();    
+   // autoDrive = new AutonDriveSubsystem();    
     m_oi = new OI();
 
     SmartDashboard.putData(driveTrain);
@@ -66,9 +71,9 @@ public class Robot extends TimedRobot {
   
     //basically for auton "Defualt Auto" will be called since set as defualt, or if selected
     //and will call command "Example Command" for example here
-    m_chooser.setDefaultOption("Default Auto", new AutoDriveCommand());
-    m_chooser.addOption("Manual mode", new DriveController());
-    SmartDashboard.putData("Auto mode", m_chooser);
+   // m_chooser.setDefaultOption("Default Auto", new AutoDriveCommand());
+   // m_chooser.addOption("Manual mode", new DriveController());
+   // SmartDashboard.putData("Auto mode", m_chooser);
   
     //calibrate gyro
     gyro.calibrate();
@@ -169,8 +174,8 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
-    //resets gyro value upon initializing
-    autonCommand = m_chooser.getSelected();
+  
+    //autonCommand = m_chooser.getSelected();
 
     /*
      * String autoSelected = SmartDashboard.getString("Auto Selector",
@@ -181,9 +186,10 @@ public class Robot extends TimedRobot {
 
     // schedule the autonomous command (example)
     if (autonCommand != null) {
-      autonCommand.start();
-
+      //autonCommand.start();
     }
+    timer.reset();
+    timer.start();
   }
 
   /**
@@ -191,8 +197,14 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousPeriodic() {
-    Scheduler.getInstance().run();
+    //Scheduler.getInstance().run();
+    if (timer.get() <= 3.0){
+      ((DriveTrainSubsytem) driveTrain).mecanumAngleDrive(0, 0.3, 0);
+    } else {
+      ((DriveTrainSubsytem) driveTrain).mecanumAngleDrive(0, 0, 0);
+    }
   }
+
 
   @Override
   public void teleopInit() {
@@ -200,9 +212,14 @@ public class Robot extends TimedRobot {
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
+//    manualDriveCommand = new DriveController();
+
     if (autonCommand != null) {
-      autonCommand.cancel();
+     // autonCommand.cancel();
     }
+   // if (manualDriveCommand != null){
+   //   manualDriveCommand.start();
+   // }
     
   }
 

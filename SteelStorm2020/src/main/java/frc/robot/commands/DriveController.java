@@ -13,7 +13,6 @@ import static frc.robot.Robot.driveTrain;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.command.Command;
 import frc.robot.Robot;
-import frc.robot.RobotMap;
 import frc.robot.subsystems.DriveTrainSubsytem;
 
 public class DriveController extends Command {
@@ -31,8 +30,9 @@ public class DriveController extends Command {
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
-    //Robot.driveTrain.mecanumAngleDrive(-driver.getX(Hand.kLeft), -driver.getY(Hand.kLeft), driver.getX(Hand.kRight));
-    ((DriveTrainSubsytem) driveTrain).mecanumDriveMethod(-driver.getX(Hand.kLeft), -driver.getY(Hand.kLeft), driver.getX(Hand.kRight));
+    //System.out.println("%%%%%%%%%%%%%%%Manual DRIVE%%%%%%%%%%%%%%%%%");
+    //((DriveTrainSubsytem) driveTrain).mecanumDriveMethod(-driver.getX(Hand.kRight), -driver.getY(Hand.kRight), driver.getX(Hand.kLeft));
+    ((DriveTrainSubsytem) driveTrain).mecanumAngleDrive(-driver.getX(Hand.kRight), -driver.getY(Hand.kRight), driver.getX(Hand.kLeft));
   }
 
   // Make this return true when this Command no longer needs to run execute()
@@ -45,14 +45,13 @@ public class DriveController extends Command {
   @Override
   protected void end() {
     //stops all motors
-    ((DriveTrainSubsytem) driveTrain).stop();
+    //((DriveTrainSubsytem) driveTrain).stop();
   }
 
   // Called when another command which requires one or more of the same
   // subsystems is scheduled to run
   @Override
   protected void interrupted() {
-    //stops motors
     end();
   }
 }

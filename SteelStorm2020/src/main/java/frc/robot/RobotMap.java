@@ -42,7 +42,7 @@ public class RobotMap {
   public static int Img_Width = 120;
   public static int Img_Height = 160;
   //drive PID tuning
-  public static double threshold = 0.1;
+  public static double threshold = 0.18;
   public static double Kp = 0.03;
   //analog port
   public static int mb1013Port = 0;

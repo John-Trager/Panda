@@ -7,7 +7,6 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
@@ -17,6 +16,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import frc.robot.RobotMap;
 import frc.robot.commands.AutoDriveCommand;
+import frc.robot.subsystems.DriveTrainSubsytem;
 
 /**
  * Add your docs here.
@@ -25,7 +25,8 @@ public class AutonDriveSubsystem extends Subsystem {
   // Put methods for controlling this subsystem
   // here. Call these from Commands.
   //ultra-sonic sensor
-  public static final AnalogInput mb1013 = new AnalogInput(RobotMap.mb1013Port);
+  //public AnalogInput mb1013 = new AnalogInput(RobotMap.mb1013Port);
+  //timer 
   //error for P controller
   double error;
   //output of P contoller
@@ -36,18 +37,15 @@ public class AutonDriveSubsystem extends Subsystem {
   String mode = "";
   //for auton
   static double setAngle;
-  String autoDriveState;
+
+  String autoDriveState = "null";
+
+  public boolean isDone = false;
   // creating timer
-  public final static Timer timer = new Timer();
-  // assigning motors to speed controls relative chanel
-  public static SpeedController fLeftCim = new Talon(RobotMap.fLeftCim);
-  public static SpeedController bLeftCim = new Talon(RobotMap.bLeftCim);
-  public static SpeedController fRightCim = new Talon(RobotMap.fRightCim);
-  public static SpeedController bRightCim = new Talon(RobotMap.bRightCim);
+  public static Timer timer = new Timer();
 
-  public static MecanumDrive mecanum_drive = new MecanumDrive(fLeftCim, bLeftCim, fRightCim, bRightCim);
-
-  public AutonDriveSubsystem(){
+  public AutonDriveSubsystem() {
+    timer.reset();
     System.out.println("AutonDriveSubsystem Started");
   }
 
@@ -57,8 +55,8 @@ public class AutonDriveSubsystem extends Subsystem {
   }
 
   // gets angle for auton starts timer
-  public static void setAngle() {
-    // timer.reset();
+  public void setUpSystem() {
+    //timer.reset();
     timer.start();
     setAngle = Robot.gyro.getAngle();
   }
@@ -74,27 +72,28 @@ public class AutonDriveSubsystem extends Subsystem {
     }
   }
 
-  // return distance
+  /* return distance
   public double getDistance() {
     double distance = mb1013.getVoltage() * RobotMap.VoltToInches;
     SmartDashboard.putNumber("Distance(IN)", distance);
     return distance;
-  }
+  }*/
 
   public void autonTimerMoveForward() {
     lastHeading = getAngle();
     error = lastHeading - setAngle;
     rotOutput = RobotMap.Kp * error;
     if (timer.get() <= RobotMap.driveTime) {
-      autoDriveState = "IN";
-      mecanum_drive.driveCartesian(RobotMap.autonSpeed, 0, rotOutput * 0.7);
+      autoDriveState = "In";
+      //DriveTrainSubsytem.mecanumDriveMethod(0.2,0,0);
     } else {
       autoDriveState = "OUT";
-      mecanum_drive.driveCartesian(0, 0, 0);
+      isDone = true;
     }
     SmartDashboard.putString("AUTO DRIVE", autoDriveState);
+    SmartDashboard.putNumber("TIMER", timer.get());
   }
-
+  /*
   public void autonDistanceMoveForward() {
     lastHeading = getAngle();
     error = lastHeading - setAngle;
@@ -104,6 +103,10 @@ public class AutonDriveSubsystem extends Subsystem {
     } else {
       mecanum_drive.driveCartesian(0, 0, 0);
     }
+  }*/
+
+  public void stop(){
+    
   }
 
 

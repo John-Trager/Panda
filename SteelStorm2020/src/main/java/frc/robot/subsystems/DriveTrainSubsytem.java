@@ -30,7 +30,7 @@ public class DriveTrainSubsytem extends Subsystem {
   //toggle var to reverse direction of driving
   public boolean toggle = false;
   //ultra-sonic sensor
-  public static final AnalogInput mb1013 = new AnalogInput(RobotMap.mb1013Port);
+  //public static final AnalogInput mb1013 = new AnalogInput(RobotMap.mb1013Port);
   //angle to go to 
   double setDirection = 0;
   //error for P controller
@@ -43,25 +43,14 @@ public class DriveTrainSubsytem extends Subsystem {
   String mode = "";
   //for auton
   static double setAngle;
-  // creating timer
-  public final static Timer timer = new Timer();
 
   String autoDriveState;
 
   // assigning motors to speed controls relative chanel
-  public static SpeedController fLeftCim = new Talon(RobotMap.fLeftCim);
+  public  static SpeedController fLeftCim = new Talon(RobotMap.fLeftCim);
   public static SpeedController bLeftCim = new Talon(RobotMap.bLeftCim);
   public static SpeedController fRightCim = new Talon(RobotMap.fRightCim);
   public static SpeedController bRightCim = new Talon(RobotMap.bRightCim);
-
-  // assigning speedcontroller groups for left and right
-  // public static SpeedControllerGroup left = new SpeedControllerGroup(fLeftCim,
-  // bLeftCim);
-  // public static SpeedControllerGroup right = new
-  // SpeedControllerGroup(fRightCim, bRightCim);
-
-  // creating differential drive object
-  // DifferentialDrive drive = new DifferentialDrive(left, right);
 
   // creating mecanum drive object
   public static MecanumDrive mecanum_drive = new MecanumDrive(fLeftCim, bLeftCim, fRightCim, bRightCim);
@@ -69,7 +58,7 @@ public class DriveTrainSubsytem extends Subsystem {
   // runs method on startup? (constructer method)
   public DriveTrainSubsytem() {
     // may need to disable during P controller and for auton
-    // drive.setSafetyEnabled(true);
+    //drive.setSafetyEnabled(true);
     System.out.println("DriveSystem Started");
   }
 
@@ -93,11 +82,11 @@ public class DriveTrainSubsytem extends Subsystem {
   }
 
   // field-centric "field-oriented" mecanum drive
-  public void mecanumDriveGyro(double ySpeed, double xSpeed, double zRotation, double gyroAngle) {
+  public void mecanumDriveGyro(final double ySpeed, final double xSpeed, final double zRotation, final double gyroAngle) {
     mecanum_drive.driveCartesian(ySpeed, xSpeed, zRotation, gyroAngle);
   }
 
-  public void mecanumAngleDrive(double ySpeed, double xSpeed, double zRotation) {
+  public void mecanumAngleDrive(final double ySpeed, final double xSpeed, final double zRotation) {
 
     SmartDashboard.putNumber("Gyro", Robot.gyro.getAngle());
     SmartDashboard.putNumber("Gyro Ranged", getAngle());
@@ -119,20 +108,13 @@ public class DriveTrainSubsytem extends Subsystem {
       mecanum_drive.driveCartesian(ySpeed * RobotMap.throttleCut, xSpeed * RobotMap.throttleCut,
           rotOutput * RobotMap.throttleCut);
       mode = "auto";
-      timer.delay(RobotMap.delayTime);
+      Robot.timer.delay(RobotMap.delayTime);
     }
   }
 
   // calibrates then resets the gyro
   public static void resetGyro() {
     Robot.gyro.reset();
-  }
-
-  // gets angle for auton starts timer
-  public static void setAngle() {
-    // timer.reset();
-    timer.start();
-    setAngle = Robot.gyro.getAngle();
   }
 
   // makes gyro range (-360,360)
@@ -143,67 +125,6 @@ public class DriveTrainSubsytem extends Subsystem {
       return (Robot.gyro.getAngle() % 360);
     } else {
       return Robot.gyro.getAngle();
-    }
-  }
-
-  // return distance
-  public double getDistance() {
-    double distance = mb1013.getVoltage() * RobotMap.VoltToInches;
-    SmartDashboard.putNumber("Distance(IN)", distance);
-    return distance;
-  }
-
-  public void autonTimerMoveForward() {
-    lastHeading = getAngle();
-    error = lastHeading - setAngle;
-    rotOutput = RobotMap.Kp * error;
-    if (timer.get() <= RobotMap.driveTime) {
-      autoDriveState = "IN";
-      mecanum_drive.driveCartesian(RobotMap.autonSpeed, 0, rotOutput * 0.7);
-    } else {
-      autoDriveState = "OUT";
-      mecanum_drive.driveCartesian(0, 0, 0);
-    }
-    SmartDashboard.putString("AUTO DRIVE", autoDriveState);
-  }
-
-  public void autonDistanceMoveForward() {
-    lastHeading = getAngle();
-    error = lastHeading - setAngle;
-    rotOutput = RobotMap.Kp * error;
-    if (getDistance() >= 24.0) {
-      mecanum_drive.driveCartesian(RobotMap.autonSpeed, 0, rotOutput * 0.7);
-    } else {
-      mecanum_drive.driveCartesian(0, 0, 0);
-    }
-  }
-
-  // toggle method to reverse drive directions
-  public void toggleButton(boolean buttonA, boolean buttonB) {
-    if (buttonA) {
-      toggle = true;
-    } else if (buttonB) {
-      toggle = false;
-    }
-  }
-
-    // tank drive method
-  public void tankDrive(double leftAxis, double rightAxis, boolean button1, boolean button2) {
-    toggleButton(button1, button2);
-    if (!toggle) {
-      // drive.tankDrive(leftAxis, rightAxis);
-    } else {
-      // drive.tankDrive(-leftAxis, -rightAxis);
-    }
-  }
-
-  // arcadeDrive method
-  public void arcadeDrive(double xSpeed, double zRotation, boolean buttonA, boolean buttonB) {
-    toggleButton(buttonA, buttonB);
-    if (!toggle) {
-      // drive.arcadeDrive(xSpeed, zRotation);
-    } else {
-      // drive.arcadeDrive(-xSpeed, zRotation);
     }
   }
 
