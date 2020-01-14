@@ -59,57 +59,76 @@ when done isFinished() = true --> stop moving go to teleop
 ULTRA SONIC SENSOR setup
 use pin 3,6,7 coonect to anolog on rio
 
-package frc.robot.commands;
+-------------------------
+12-7-19
+Before Match Tests:
 
-import static frc.robot.Robot.driveTrain;
+-gyro calibration 
+(may need to warm up) if not use manual drive for auton and driveCommand
 
-import edu.wpi.first.wpilibj.command.Command;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Robot;
-import frc.robot.RobotMap;
-import frc.robot.subsystems.AutoDriveSubsystem;
-import frc.robot.subsystems.DriveTrainSubsytem;
+-test ball intake motors
+ for in (leftTrig) and out (rightTrig) may need to switch sign on motors.set()
 
-public class autonCommand extends Command {
-  public autonCommand() {
-    // Use requires() here to declare subsystem dependencies
-    // eg. requires(chassis);
-    requires(Robot.autoDrive);
-    requires(driveTrain);
-  }
+ -test pneumatics (set reg psi 30)
+ B-button out, A-button in
+ check for leaks
 
-  // Called just before this Command runs the first time
-  @Override
-  protected void initialize() {
-    DriveTrainSubsytem.resetGyro();
-    DriveTrainSubsytem.setAngle();
-  }
+ -test and setup shuffleboard
+ camera and gyro
 
-  // Called repeatedly when this Command is scheduled to run
-  @Override
-  protected void execute() {
-    Robot.autoDrive.autonTimerMoveForward();
-    SmartDashboard.putNumber("Timer", DriveTrainSubsytem.timer.get());
-  }
+---To Make-----------------
 
-  // Make this return true when this Command no longer needs to run execute()
-  @Override
-  protected boolean isFinished() {
-    //method returns true if times up or if sensor is close enough
-    return false;
-  }
+- connect redlines to motor controllers and tie down wire in workable way
 
-  // Called once after isFinished returns true
-  @Override
-  protected void end() {
-   //Robot.driveTrain.stop();
-  }
+-flip redlines and re-drill pneumatic mounts
 
-  // Called when another command which requires one or more of the same
-  // subsystems is scheduled to run
-  @Override
-  protected void interrupted() {
-    end();
-  }
-}
+-add more camber (washer) to sliders (one more on left than right)
 
+-back bumpers
+
+-camera mounts
+
+-backboard drill slots out for pneumatics and rsl light
+
+---Tools--------------------
+
+7/16 wrench, hand socket
+adjustable wrench
+other adjustable wrench but that has slots
+full socket set
+2-3 allen key sets
+hacksaw
+hammer and mallet
+saudering iron
+chrimps and actualy crimpy things
+saudering iron and sauder
+drills and drill bits
+files
+safety glasses
+all the zip ties 
+velcro and tape
+whole elecrical box
+spare Talon?
+pneumatic tubing and fittings
+clamps
+all the HARDWARE
+needle nose pliers
+pliers
+wire stripers
+c-ring plier
+c-cutter plier
+and many other Tools
+
+METAl
+flat 1/8
+the Ls we used long l for redline bracket
+KOT frame peices
+L-bracket box
+1x1 tubing
+1x2 tubing
+
+12-8-20 night
+
+-TEST gyro code switched Timer to seperate object/import(in drivetrainsub)?
+
+-test testPeriodic

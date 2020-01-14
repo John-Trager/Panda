@@ -31,8 +31,8 @@ public class DriveController extends Command {
   @Override
   protected void execute() {
     //System.out.println("%%%%%%%%%%%%%%%Manual DRIVE%%%%%%%%%%%%%%%%%");
-    //((DriveTrainSubsytem) driveTrain).mecanumDriveMethod(-driver.getX(Hand.kRight), -driver.getY(Hand.kRight), driver.getX(Hand.kLeft));
-    ((DriveTrainSubsytem) driveTrain).mecanumAngleDrive(-driver.getX(Hand.kRight), -driver.getY(Hand.kRight), driver.getX(Hand.kLeft));
+    ((DriveTrainSubsytem) driveTrain).mecanumDriveMethod(-driver.getX(Hand.kRight), -driver.getY(Hand.kRight), driver.getX(Hand.kLeft));
+    //((DriveTrainSubsytem) driveTrain).mecanumAngleDrive(-driver.getX(Hand.kRight), -driver.getY(Hand.kRight), driver.getX(Hand.kLeft));
   }
 
   // Make this return true when this Command no longer needs to run execute()
@@ -45,7 +45,7 @@ public class DriveController extends Command {
   @Override
   protected void end() {
     //stops all motors
-    //((DriveTrainSubsytem) driveTrain).stop();
+    ((DriveTrainSubsytem) driveTrain).stop();
   }
 
   // Called when another command which requires one or more of the same

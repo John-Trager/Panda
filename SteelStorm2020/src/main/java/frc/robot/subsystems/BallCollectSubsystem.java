@@ -18,10 +18,17 @@ public class BallCollectSubsystem extends Subsystem {
   // Put methods for controlling this subsystem
   // here. Call these from Commands.
   //Instantiate pneumatics
-  public DoubleSolenoid collectorOne = new DoubleSolenoid(0, 1);
+  public DoubleSolenoid collectorRight = new DoubleSolenoid(0, 1);
+  public DoubleSolenoid collectorLeft = new DoubleSolenoid(2, 3);
 
-  // 1 is extend, 2 is in, 3 or else is off
+  // 1 is in, 2 is extend, 3 or else is off CHANGE IF WIRED DIFFERENT
   public int extendSolonoid = 2;
+
+  public BallCollectSubsystem() {
+    // may need to disable during P controller and for auton
+    //drive.setSafetyEnabled(true);
+    System.out.println("BallCollectSystem Started");
+  }
   
   @Override
   public void initDefaultCommand() {
@@ -42,16 +49,22 @@ public class BallCollectSubsystem extends Subsystem {
 
   public void setCollector(){
     if (extendSolonoid == 1){
-      collectorOne.set(DoubleSolenoid.Value.kForward);
+      collectorLeft.set(DoubleSolenoid.Value.kForward);
+      collectorRight.set(DoubleSolenoid.Value.kForward);
     } else if (extendSolonoid == 2){
-      collectorOne.set(DoubleSolenoid.Value.kReverse);
+      collectorLeft.set(DoubleSolenoid.Value.kReverse);
+      collectorRight.set(DoubleSolenoid.Value.kReverse);
     } else {
-      collectorOne.set(DoubleSolenoid.Value.kOff);
+      collectorLeft.set(DoubleSolenoid.Value.kOff);
+      collectorRight.set(DoubleSolenoid.Value.kOff);
+
     }
   }
 
   public void stop(){
-    collectorOne.set(DoubleSolenoid.Value.kOff);
+    //shuts power off to solenoids
+    collectorLeft.set(DoubleSolenoid.Value.kOff);
+    collectorRight.set(DoubleSolenoid.Value.kOff);
   }
 
 

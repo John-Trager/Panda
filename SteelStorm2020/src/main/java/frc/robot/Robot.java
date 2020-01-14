@@ -11,6 +11,8 @@ import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
+import static frc.robot.OI.operator;
+
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
@@ -23,11 +25,8 @@ import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.commands.AutoDriveCommand;
-import frc.robot.commands.BallCollect;
-import frc.robot.commands.DriveController;
-import frc.robot.subsystems.AutonDriveSubsystem;
 import frc.robot.subsystems.BallCollectSubsystem;
+import frc.robot.subsystems.BallIntakeSubsystem;
 import frc.robot.subsystems.DriveTrainSubsytem;
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -39,18 +38,24 @@ import frc.robot.subsystems.DriveTrainSubsytem;
 public class Robot extends TimedRobot {
   
   public static Subsystem driveTrain;
-  public static AutonDriveSubsystem autoDrive;
+  public static Subsystem ballCollect;
+  public static Subsystem ballIntake;
   public static OI m_oi;
   //vision thread for cameras
   //Thread visionThread;
   Command autonCommand;
-  Command manualDriveCommand;
   //object to asign auton mode to
   SendableChooser<Command> m_chooser = new SendableChooser<>();
   //setup gyro
   public static ADXRS450_Gyro gyro = new ADXRS450_Gyro();
-
+  //normla use timer
   public static Timer timer = new Timer();
+  //for testing mode
+  public static Timer testTimer = new Timer();
+  //test variable for starting clock
+  public boolean testTimerSet = false;
+  //for closing pneumatic in test
+  public boolean pneumaticTestClose = true;
 
 
   /**
@@ -60,23 +65,25 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
 
+    //calibrate gyro
+    gyro.calibrate();
+
     //Instantiate all subsytems 
-    //public static BallCollectSubsystem ballCollect = new BallCollectSubsystem();
     driveTrain = new DriveTrainSubsytem();
-   // autoDrive = new AutonDriveSubsystem();    
+    ballCollect = new BallCollectSubsystem();
+    ballIntake = new BallIntakeSubsystem();
     m_oi = new OI();
 
     SmartDashboard.putData(driveTrain);
-    //SmartDashboard.putData(autoDrive);
+    SmartDashboard.putData(ballCollect);
+    SmartDashboard.putData(ballIntake);
+
   
     //basically for auton "Defualt Auto" will be called since set as defualt, or if selected
     //and will call command "Example Command" for example here
    // m_chooser.setDefaultOption("Default Auto", new AutoDriveCommand());
    // m_chooser.addOption("Manual mode", new DriveController());
    // SmartDashboard.putData("Auto mode", m_chooser);
-  
-    //calibrate gyro
-    gyro.calibrate();
 
     //setup USB cameras:
     //Start camera server
@@ -91,6 +98,7 @@ public class Robot extends TimedRobot {
     } else {
       SmartDashboard.putBoolean("Camera Status", false);
     }
+
 /*
     //config vison thread
     visionThread = new Thread(() -> {
@@ -184,10 +192,11 @@ public class Robot extends TimedRobot {
      * autonomousCommand = new ExampleCommand(); break; }
      */
 
-    // schedule the autonomous command (example)
+    /* //schedule the autonomous command (example)
     if (autonCommand != null) {
-      //autonCommand.start();
-    }
+      autonCommand.start();
+    } */
+
     timer.reset();
     timer.start();
   }
@@ -197,11 +206,14 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousPeriodic() {
-    //Scheduler.getInstance().run();
-    if (timer.get() <= 3.0){
-      ((DriveTrainSubsytem) driveTrain).mecanumAngleDrive(0, 0.3, 0);
+    if (timer.get() <= RobotMap.driveTime){
+      //((DriveTrainSubsytem) driveTrain).mecanumAngleDrive(0, RobotMap.autonSpeed, 0);
+      ((DriveTrainSubsytem) driveTrain).mecanumDriveMethod(0, -RobotMap.autonSpeed, 0);
+    } else if ((timer.get() <= RobotMap.driveTimeEnd) && (timer.get() > RobotMap.driveTimePause)){
+      ((DriveTrainSubsytem) driveTrain).mecanumDriveMethod(0, RobotMap.autonSpeedEnd, 0);
     } else {
-      ((DriveTrainSubsytem) driveTrain).mecanumAngleDrive(0, 0, 0);
+      //((DriveTrainSubsytem) driveTrain).mecanumAngleDrive(0, 0, 0);
+      ((DriveTrainSubsytem) driveTrain).mecanumDriveMethod(0, 0, 0);
     }
   }
 
@@ -217,10 +229,6 @@ public class Robot extends TimedRobot {
     if (autonCommand != null) {
      // autonCommand.cancel();
     }
-   // if (manualDriveCommand != null){
-   //   manualDriveCommand.start();
-   // }
-    
   }
 
   /**
@@ -234,8 +242,40 @@ public class Robot extends TimedRobot {
   /**
    * This function is called periodically during test mode.
    */
+  //tests
   @Override
   public void testPeriodic() {
+    if (!testTimerSet){
+      testSetup();
+      //after timer starts
+      //1. extends pneumatics (must be upt to presure first)
+      ((BallCollectSubsystem) ballCollect).checkCollector(true, false, false);
+      ((BallCollectSubsystem) ballCollect).setCollector();
+    } else if (testTimer.get() <= RobotMap.motorTimeIn){
+      //2. moves wheels in
+      ((BallIntakeSubsystem) ballIntake).spinWheels(0, RobotMap.motorTestSpeed);
+    } else if ((testTimer.get() >= RobotMap.motorTimePause) && (testTimer.get() <= RobotMap.motorTimeOut)){
+      //3. moves wheels out
+      ((BallIntakeSubsystem) ballIntake).spinWheels(RobotMap.motorTestSpeed, 0);
+    } else if (testTimer.get() > (RobotMap.pneumaticRetractTime) && (pneumaticTestClose)){
+      //4. retracts pneumatic
+      ((BallCollectSubsystem) ballCollect).checkCollector(false, true, false);
+      ((BallCollectSubsystem) ballCollect).setCollector();
+      pneumaticTestClose = false;
+    } else if (operator.getYButton()){
+      //restarts system
+      testTimerSet = false;
+      pneumaticTestClose = true;
+    } else {
+      //stops wheels
+      ((BallIntakeSubsystem) ballIntake).spinWheels(0, 0);
+    }
 
+  }
+
+  public void testSetup(){
+    testTimer.reset();
+    testTimer.start();
+    testTimerSet = true;
   }
 }

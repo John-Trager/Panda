@@ -7,13 +7,10 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.SpeedController;
-import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Subsystem;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
@@ -27,27 +24,26 @@ public class DriveTrainSubsytem extends Subsystem {
   // Put methods for controlling this subsystem
   // here. Call these from Commands.
 
-  //toggle var to reverse direction of driving
+  // toggle var to reverse direction of driving
   public boolean toggle = false;
-  //ultra-sonic sensor
-  //public static final AnalogInput mb1013 = new AnalogInput(RobotMap.mb1013Port);
-  //angle to go to 
-  double setDirection = 0;
-  //error for P controller
+  // ultra-sonic sensor
+  // public static final AnalogInput mb1013 = new
+  // AnalogInput(RobotMap.mb1013Port);
+  // error for P controller
   double error;
-  //output of P contoller
+  // output of P contoller
   double rotOutput;
-  //holds value of last heading angle
+  // holds value of last heading angle
   double lastHeading;
-  //string var for mode
+  // string var for mode
   String mode = "";
-  //for auton
+  // for auton
   static double setAngle;
 
   String autoDriveState;
 
-  // assigning motors to speed controls relative chanel
-  public  static SpeedController fLeftCim = new Talon(RobotMap.fLeftCim);
+  // assigning motors to speed controls to relative chanel
+  public static SpeedController fLeftCim = new Talon(RobotMap.fLeftCim);
   public static SpeedController bLeftCim = new Talon(RobotMap.bLeftCim);
   public static SpeedController fRightCim = new Talon(RobotMap.fRightCim);
   public static SpeedController bRightCim = new Talon(RobotMap.bRightCim);
@@ -55,38 +51,13 @@ public class DriveTrainSubsytem extends Subsystem {
   // creating mecanum drive object
   public static MecanumDrive mecanum_drive = new MecanumDrive(fLeftCim, bLeftCim, fRightCim, bRightCim);
 
-  // runs method on startup? (constructer method)
+  // (constructer method)
   public DriveTrainSubsytem() {
-    // may need to disable during P controller and for auton
-    //drive.setSafetyEnabled(true);
+    // drive.setSafetyEnabled(true);
     System.out.println("DriveSystem Started");
   }
 
-  // robot-centric mecanum drive
-  public void mecanumDriveMethod(double ySpeed, double xSpeed, double zRotation) {
-    SmartDashboard.putNumber("Gyro", Robot.gyro.getAngle());
-    SmartDashboard.putNumber("Gyro Ranged", getAngle());
-    SmartDashboard.putNumber("Z Rotation", zRotation);
-    if (Math.abs(zRotation) < (RobotMap.threshold)) {
-      zRotation = 0;
-    }
-    if (Math.abs(ySpeed) < (RobotMap.threshold)) {
-      ySpeed = 0;
-    }
-    if (Math.abs(xSpeed) < (RobotMap.threshold)) {
-      xSpeed = 0;
-    }
-
-    mecanum_drive.driveCartesian(ySpeed * RobotMap.throttleCut, xSpeed * RobotMap.throttleCut,
-        zRotation * RobotMap.throttleCut);
-  }
-
-  // field-centric "field-oriented" mecanum drive
-  public void mecanumDriveGyro(final double ySpeed, final double xSpeed, final double zRotation, final double gyroAngle) {
-    mecanum_drive.driveCartesian(ySpeed, xSpeed, zRotation, gyroAngle);
-  }
-
-  public void mecanumAngleDrive(final double ySpeed, final double xSpeed, final double zRotation) {
+  public void mecanumAngleDrive(double ySpeed, double xSpeed, double zRotation) {
 
     SmartDashboard.putNumber("Gyro", Robot.gyro.getAngle());
     SmartDashboard.putNumber("Gyro Ranged", getAngle());
@@ -108,11 +79,51 @@ public class DriveTrainSubsytem extends Subsystem {
       mecanum_drive.driveCartesian(ySpeed * RobotMap.throttleCut, xSpeed * RobotMap.throttleCut,
           rotOutput * RobotMap.throttleCut);
       mode = "auto";
-      Robot.timer.delay(RobotMap.delayTime);
+      Timer.delay(RobotMap.delayTime);
     }
   }
 
-  // calibrates then resets the gyro
+  /**
+   * turntoAngle turns to angle passed through angle
+   * @param ySpeed 
+   * @param xSpeed
+   * @param zRotation
+   * @param angle angle in which to rotate to (-360,360)
+   * @return returns if the robot is at the specified angle
+   */
+  
+  public boolean turnToAngle(double ySpeed, double xSpeed, double zRotation, double angle){
+
+    if(setAngle == (int) angle){
+      return true;
+    } 
+    if (Math.abs(zRotation) > (RobotMap.threshold)) {
+      // use manual drive
+      mecanum_drive.driveCartesian(ySpeed, xSpeed, zRotation);
+      // last heading angle updated
+      setAngle = angle;
+      mode = "angle Manual";
+    } else {
+      mode = "going to Angle";
+      error = setAngle - getAngle();
+      rotOutput = RobotMap.Kp * error;
+      mecanum_drive.driveCartesian(ySpeed * RobotMap.throttleCut, xSpeed * RobotMap.throttleCut,
+          rotOutput * RobotMap.throttleCut);
+      Timer.delay(RobotMap.delayTime);
+    }
+
+    SmartDashboard.putNumber("Gyro", Robot.gyro.getAngle());
+    SmartDashboard.putNumber("Gyro Ranged", getAngle());
+    SmartDashboard.putNumber("Z Rotation", zRotation);
+    SmartDashboard.putNumber("Kp", RobotMap.Kp);
+    SmartDashboard.putNumber("set Angle", setAngle);
+    SmartDashboard.putString("Mode", mode);
+    SmartDashboard.putNumber("Auto Ouput", rotOutput);
+    
+    return false;
+  }
+
+  //resets the gyro
   public static void resetGyro() {
     Robot.gyro.reset();
   }
@@ -128,9 +139,36 @@ public class DriveTrainSubsytem extends Subsystem {
     }
   }
 
+  // manual robot-centric mecanum drive
+  public void mecanumDriveMethod(double xSpeed, double ySpeed, double zRotation) {
+    SmartDashboard.putNumber("Gyro", Robot.gyro.getAngle());
+    SmartDashboard.putNumber("Gyro Ranged", getAngle());
+    SmartDashboard.putNumber("Z Rotation", zRotation);
+    if (Math.abs(zRotation) < (RobotMap.threshold)) {
+       zRotation = 0;
+    }
+    if (Math.abs(ySpeed) < (RobotMap.threshold)) {
+      ySpeed = 0;
+    }
+     if (Math.abs(xSpeed) < (RobotMap.threshold)) {
+       xSpeed = 0;
+     }
+  
+    mecanum_drive.driveCartesian(xSpeed * RobotMap.throttleCut, ySpeed * 0.5,
+    zRotation * 0.5);
+    }
+  
+   // manual field-centric "field-oriented" mecanum drive
+  public void mecanumDriveGyro(final double ySpeed, final double xSpeed, final double zRotation, final double gyroAngle) {
+    mecanum_drive.driveCartesian(ySpeed, xSpeed, zRotation, gyroAngle);
+  }
+
   // stops drive motors
   public void stop() {
-    mecanum_drive.driveCartesian(0, 0, 0);
+    fLeftCim.stopMotor();
+    fRightCim.stopMotor();
+    bLeftCim.stopMotor();
+    bRightCim.stopMotor();
 	}
 
   @Override

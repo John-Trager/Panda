@@ -7,53 +7,48 @@
 
 package frc.robot.commands;
 
-import static frc.robot.Robot.autoDrive;
+import static frc.robot.OI.operator;
+import static frc.robot.Robot.ballIntake;
 
+import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.command.Command;
-import frc.robot.subsystems.AutonDriveSubsystem;
-import frc.robot.subsystems.DriveTrainSubsytem;
 import frc.robot.Robot;
+import frc.robot.subsystems.BallIntakeSubsystem;
 
-public class AutoDriveCommand extends Command {
-
-  public AutoDriveCommand() {
+public class BallIntakeCommand extends Command {
+  public BallIntakeCommand() {
     // Use requires() here to declare subsystem dependencies
     // eg. requires(chassis);
-    requires(Robot.autoDrive);
+    requires(Robot.ballIntake);
   }
 
   // Called just before this Command runs the first time
   @Override
   protected void initialize() {
-    autoDrive.setUpSystem();
-    System.out.println("________________AutonCommand INTit______________");
   }
 
   // Called repeatedly when this Command is scheduled to run
   @Override
   protected void execute() {
-    autoDrive.autonTimerMoveForward();
-    System.out.println("^^^^^^^^^^^^auto execute^^^^^^^^^^^^^^");
+    ((BallIntakeSubsystem) ballIntake).spinWheels(operator.getTriggerAxis(Hand.kLeft), operator.getTriggerAxis((Hand.kRight)));
   }
 
   // Make this return true when this Command no longer needs to run execute()
   @Override
   protected boolean isFinished() {
-    return autoDrive.isDone;
+    return false;
   }
 
   // Called once after isFinished returns true
   @Override
   protected void end() {
-    System.out.println("******Auto Drive end()*******");
-    autoDrive.stop();
+    ((BallIntakeSubsystem) ballIntake).stop();
   }
 
   // Called when another command which requires one or more of the same
   // subsystems is scheduled to run
   @Override
   protected void interrupted() {
-    System.out.println("-------------Auto Drive intereupt--------------");
-    autoDrive.stop();
+    ((BallIntakeSubsystem) ballIntake).stop();
   }
 }

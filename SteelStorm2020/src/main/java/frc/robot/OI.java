@@ -43,6 +43,6 @@ public class OI {
   // button.whenReleased(new ExampleCommand());
 
   public static XboxController driver = new XboxController(0);
-  //public static XboxController oporator = new XboxController(1);
+  public static XboxController operator = new XboxController(1);
   
 }
